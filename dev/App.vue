@@ -20,11 +20,19 @@ const pdfSource =
 </script>
 
 <template>
-  <VuePdfEmbed :source="pdfSource" />
+  <VuePdfEmbed
+    :source="pdfSource"
+    text-layer
+    :highlight-text="['Hello', 'h', 'o', 'd']"
+  />
 </template>
 
 <style lang="scss">
-@import 'pdfjs-dist/web/pdf_viewer.css';
+// @import 'pdfjs-dist/web/pdf_viewer.css';
+@import '../src//pdf_viewer.css';
+// @import '../dist/style/index.css';
+// @import '../dist/style/annotationLayer.css';
+// @import '../dist/style/textLayer.css';
 
 body {
   padding: 16px;

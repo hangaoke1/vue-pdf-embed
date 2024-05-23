@@ -62,6 +62,11 @@ const props = withDefaults(
      * Desired page width.
      */
     width?: number
+
+    /**
+     * Text to highlight.
+     */
+    highlightText?: string[]
   }>(),
   {
     rotation: 0,
@@ -297,6 +302,19 @@ const render = async () => {
             }),
             div1
           )
+
+          // Highlight text
+          if (props.highlightText) {
+            const layerChildren = div1.querySelectorAll('[role="presentation"]')
+            for (const child of layerChildren) {
+              let innerHTML = child.innerHTML
+              innerHTML = innerHTML.replace(
+                new RegExp(props.highlightText.join('|'), 'g'),
+                (match) => `<mark>${match}</mark>`
+              )
+              child.innerHTML = innerHTML
+            }
+          }
         }
 
         if (props.annotationLayer) {
@@ -417,6 +435,7 @@ watch(
     props.scale,
     props.textLayer,
     props.width,
+    props.highlightText,
   ],
   () => {
     if (doc.value) {

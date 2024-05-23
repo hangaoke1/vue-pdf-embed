@@ -36,7 +36,7 @@ export default defineConfig({
           [1835, 1845],
         ],
       }).map(([key, ranges]) => ({
-        src: 'node_modules/pdfjs-dist/web/pdf_viewer.css',
+        src: 'src/pdf_viewer.css',
         dest: 'dist/style',
         rename: `${key}.css`,
         transform: (contents) => {
