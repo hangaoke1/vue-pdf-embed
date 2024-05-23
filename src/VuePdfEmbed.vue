@@ -86,6 +86,7 @@ const emit = defineEmits<{
 
 const pageNums = shallowRef<number[]>([])
 const pageRefs = shallowRef<HTMLDivElement[]>([])
+const pageWrapRefs = shallowRef<HTMLDivElement[]>([])
 const pageScales = ref<number[]>([])
 const root = shallowRef<HTMLDivElement | null>(null)
 
@@ -273,6 +274,9 @@ const render = async () => {
 
         pageScales.value[i] = pageScale
 
+        pageWrapRefs.value[i].style.width = cssWidth
+        pageWrapRefs.value[i].style.height = cssHeight
+
         canvas.style.width = cssWidth
         canvas.style.height = cssHeight
 
@@ -458,7 +462,12 @@ defineExpose({
 
 <template>
   <div :id="id" ref="root" class="vue-pdf-embed">
-    <div v-for="(pageNum, i) in pageNums" :key="pageNum">
+    <div
+      v-for="(pageNum, i) in pageNums"
+      :key="pageNum"
+      ref="pageWrapRefs"
+      class="vue-pdf-embed__pagewrap"
+    >
       <slot name="before-page" :page="pageNum" />
 
       <div

@@ -1,5 +1,10 @@
 <script setup lang="ts">
+import { reactive } from 'vue'
 import VuePdfEmbed from '../src/index'
+
+const state = reactive({
+  scale: 1,
+})
 
 const pdfSource =
   'data:application/pdf;base64,' +
@@ -20,11 +25,26 @@ const pdfSource =
 </script>
 
 <template>
-  <VuePdfEmbed
-    :source="pdfSource"
-    text-layer
-    :highlight-text="['Hello', 'h', 'o', 'd']"
-  />
+  <div>
+    <button @click="state.scale += 0.1">放大</button>
+    <button @click="state.scale -= 0.1">缩小</button>
+    <div
+      style="
+        width: 1000px;
+        border: 1px solid red;
+        overflow: auto;
+        height: 800px;
+      "
+    >
+      <VuePdfEmbed
+        style="width: 100%"
+        :width="state.scale * 500"
+        :source="pdfSource"
+        text-layer
+        :highlight-text="['Hello']"
+      />
+    </div>
+  </div>
 </template>
 
 <style lang="scss">
@@ -40,12 +60,8 @@ body {
 }
 
 .vue-pdf-embed {
-  margin: auto;
-  max-width: 480px;
-
-  & > div {
-    margin-bottom: 4px;
-    box-shadow: 0 2px 8px 4px rgba(0, 0, 0, 0.1);
+  &__pagewrap {
+    margin: auto;
   }
 }
 </style>
