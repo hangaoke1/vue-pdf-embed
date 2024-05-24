@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import VuePdfEmbed from '../src/index'
 
+const pdfRef = ref<InstanceType<typeof VuePdfEmbed> | null>(null)
 const state = reactive({
   scale: 1,
+  highlight: ['Hello'],
+  zooming: false,
 })
 
 const pdfSource =
@@ -22,26 +25,40 @@ const pdfSource =
   'MDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMzAxIDAwMDAwIG4gCjAwMDAwMDAzODAg' +
   'MDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9vdCAxIDAgUgo+PgpzdGFy' +
   'dHhyZWYKNDkyCiUlRU9G'
+
+const timer = ref()
+const handleZoom = (type: 'zoomIn' | 'zoomOut') => {
+  state.zooming = true
+  if (type === 'zoomIn') {
+    state.scale += 0.2
+  } else {
+    state.scale -= 0.2
+  }
+
+  if (timer.value) {
+    clearTimeout(timer.value)
+  }
+  timer.value = setTimeout(() => {
+    state.zooming = false
+    pdfRef.value?.render()
+  }, 500)
+}
 </script>
 
 <template>
   <div>
-    <button @click="state.scale += 0.1">放大</button>
-    <button @click="state.scale -= 0.1">缩小</button>
+    <button @click="handleZoom('zoomIn')">放大</button>
+    <button @click="handleZoom('zoomOut')">缩小</button>
     <div
-      style="
-        width: 1000px;
-        border: 1px solid red;
-        overflow: auto;
-        height: 800px;
-      "
+      style="width: 600px; border: 1px solid red; overflow: auto; height: 800px"
     >
       <VuePdfEmbed
-        style="width: 100%"
+        ref="pdfRef"
         :width="state.scale * 500"
         :source="pdfSource"
+        :highlight-text="state.highlight"
+        :zooming="state.zooming"
         text-layer
-        :highlight-text="['Hello']"
       />
     </div>
   </div>
@@ -62,6 +79,9 @@ body {
 .vue-pdf-embed {
   &__pagewrap {
     margin: auto;
+  }
+  canvas {
+    background-color: #fff;
   }
 }
 </style>

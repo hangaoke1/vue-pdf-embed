@@ -1,3 +1,4 @@
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, shallowRef, toRef, watch } from 'vue'
 import { AnnotationLayer, renderTextLayer } from 'pdfjs-dist/legacy/build/pdf'
@@ -67,6 +68,8 @@ const props = withDefaults(
      * Text to highlight.
      */
     highlightText?: string[]
+
+    zooming?: boolean
   }>(),
   {
     rotation: 0,
@@ -245,7 +248,6 @@ const render = async () => {
     pageNums.value = props.page
       ? [props.page]
       : [...Array(doc.value.numPages + 1).keys()].slice(1)
-    pageScales.value = Array(pageNums.value.length).fill(1)
 
     await Promise.all(
       pageNums.value.map(async (pageNum, i) => {
@@ -258,13 +260,22 @@ const render = async () => {
           HTMLDivElement,
         ]
         const isTransposed = !!((pageRotation / 90) % 2)
+
+        // canvas 画布的实际尺寸
         const [actualWidth, actualHeight] = getPageDimensions(
           isTransposed
             ? page.view[2] / page.view[3]
             : page.view[3] / page.view[2]
         )
+
         const cssWidth = `${Math.floor(actualWidth)}px`
         const cssHeight = `${Math.floor(actualHeight)}px`
+
+        // pdf 内容的实际尺寸
+        // [x1, y1, x2, y2]
+        // [0, 0, 200, 200]
+        // 宽度 page.view[2]
+        // 高度 page.view[3]
         const pageWidth = isTransposed ? page.view[3] : page.view[2]
         const pageScale = actualWidth / pageWidth
         const viewport = page.getViewport({
@@ -274,8 +285,17 @@ const render = async () => {
 
         pageScales.value[i] = pageScale
 
-        pageWrapRefs.value[i].style.width = cssWidth
-        pageWrapRefs.value[i].style.height = cssHeight
+        const w = `var(--scale-factor) * ${
+          (viewport.rawDims as any).pageWidth
+        }px`
+        const h = `var(--scale-factor) * ${
+          (viewport.rawDims as any).pageHeight
+        }px`
+        const widthStr = `calc(${w})`
+        const heightStr = `calc(${h})`
+
+        pageWrapRefs.value[i].style.width = widthStr
+        pageWrapRefs.value[i].style.height = heightStr
 
         canvas.style.width = cssWidth
         canvas.style.height = cssHeight
@@ -288,6 +308,10 @@ const render = async () => {
         if (div2) {
           div2.style.width = isTransposed ? cssHeight : cssWidth
           div2.style.height = isTransposed ? cssWidth : cssHeight
+        }
+
+        if (props.zooming) {
+          return
         }
 
         await renderPage(
@@ -457,13 +481,21 @@ defineExpose({
   doc,
   download,
   print,
+  render,
 })
 </script>
 
 <template>
-  <div :id="id" ref="root" class="vue-pdf-embed">
+  <div
+    :id="id"
+    ref="root"
+    class="vue-pdf-embed"
+    :style="{
+      '--scale-factor': pageScales[0] || 1,
+    }"
+  >
     <div
-      v-for="(pageNum, i) in pageNums"
+      v-for="pageNum in pageNums"
       :key="pageNum"
       ref="pageWrapRefs"
       class="vue-pdf-embed__pagewrap"
@@ -474,9 +506,6 @@ defineExpose({
         :id="id && `${id}-${pageNum}`"
         ref="pageRefs"
         class="vue-pdf-embed__page"
-        :style="{
-          '--scale-factor': pageScales[i],
-        }"
       >
         <canvas />
 
