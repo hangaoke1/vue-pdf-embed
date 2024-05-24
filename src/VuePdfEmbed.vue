@@ -239,7 +239,7 @@ const print = async (dpi = 300, filename = '', allPages = false) => {
 /**
  * Renders the PDF document as canvas element(s) and additional layers.
  */
-const render = async () => {
+const render = async (skipCanvas?: boolean) => {
   if (!doc.value) {
     return
   }
@@ -314,13 +314,23 @@ const render = async () => {
           return
         }
 
-        await renderPage(
-          page,
-          viewport.clone({
-            scale: viewport.scale * window.devicePixelRatio * props.scale,
-          }),
-          canvas
-        )
+        if (!skipCanvas) {
+          const clonedCanvas = document.createElement('canvas')
+          clonedCanvas.style.width = canvas.style.width
+          clonedCanvas.style.height = canvas.style.height
+          await renderPage(
+            page,
+            viewport.clone({
+              scale: viewport.scale * window.devicePixelRatio * props.scale,
+            }),
+            clonedCanvas
+            // canvas
+          )
+
+          // 双缓存
+          const parentEl = canvas.parentElement
+          parentEl?.replaceChild(clonedCanvas, canvas)
+        }
 
         if (props.textLayer) {
           await renderPageTextLayer(
@@ -338,7 +348,7 @@ const render = async () => {
               let innerHTML = child.innerHTML
               innerHTML = innerHTML.replace(
                 new RegExp(props.highlightText.join('|'), 'g'),
-                (match) => `<mark>${match}</mark>`
+                (match) => `<span class="highlight appended">${match}</span>`
               )
               child.innerHTML = innerHTML
             }
@@ -463,7 +473,6 @@ watch(
     props.scale,
     props.textLayer,
     props.width,
-    props.highlightText,
   ],
   () => {
     if (doc.value) {
@@ -471,6 +480,16 @@ watch(
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => [props.highlightText],
+  () => {
+    if (doc.value) {
+      render(true)
+    }
+  },
+  { immediate: false }
 )
 
 onBeforeUnmount(() => {

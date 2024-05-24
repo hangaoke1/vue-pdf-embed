@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import VuePdfEmbed from '../src/index'
 
 const pdfRef = ref<InstanceType<typeof VuePdfEmbed> | null>(null)
 const state = reactive({
   scale: 1,
-  highlight: ['Hello'],
+  hilightText: 'hello',
+  hilightTextTemp: '',
   zooming: false,
+})
+
+const handleBlur = () => {
+  state.hilightText = state.hilightTextTemp
+}
+
+const highlight = computed(() => {
+  return state.hilightText ? [state.hilightText] : null
 })
 
 const pdfSource =
@@ -52,11 +61,12 @@ const handleZoom = (type: 'zoomIn' | 'zoomOut') => {
     <div
       style="width: 600px; border: 1px solid red; overflow: auto; height: 800px"
     >
+      <input v-model="state.hilightTextTemp" type="text" @blur="handleBlur" />
       <VuePdfEmbed
         ref="pdfRef"
         :width="state.scale * 500"
         :source="pdfSource"
-        :highlight-text="state.highlight"
+        :highlight-text="highlight"
         :zooming="state.zooming"
         text-layer
       />
@@ -65,11 +75,7 @@ const handleZoom = (type: 'zoomIn' | 'zoomOut') => {
 </template>
 
 <style lang="scss">
-// @import 'pdfjs-dist/web/pdf_viewer.css';
-@import '../src//pdf_viewer.css';
-// @import '../dist/style/index.css';
-// @import '../dist/style/annotationLayer.css';
-// @import '../dist/style/textLayer.css';
+@import '../src/pdf_viewer.css';
 
 body {
   padding: 16px;
