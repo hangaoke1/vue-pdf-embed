@@ -6,4 +6,6 @@ declare global {
   }
 }
 
+declare module '*.pdf'
+
 export {}

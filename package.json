@@ -1,6 +1,6 @@
 {
   "name": "vue-pdf-embed-pro",
-  "version": "2.0.4-beta.0",
+  "version": "2.0.4-beta.3",
   "description": "PDF embed component for Vue",
   "keywords": [
     "vue",
@@ -39,6 +39,7 @@
     "format": "prettier . --write --ignore-path .gitignore"
   },
   "dependencies": {
+    "@vueuse/core": "^10.9.0",
     "pdfjs-dist": "^3.11.174"
   },
   "devDependencies": {

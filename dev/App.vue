@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
 import VuePdfEmbed from '../src/index'
+import testPdf from './test.pdf'
+import test2Pdf from './test3.pdf'
 
 const pdfRef = ref<InstanceType<typeof VuePdfEmbed> | null>(null)
 const state = reactive({
-  scale: 1,
   hilightText: 'hello',
   hilightTextTemp: '',
-  zooming: false,
+  page: 1,
+  pdf: 1,
+  pdfSource: testPdf,
 })
 
 const handleBlur = () => {
@@ -18,6 +21,12 @@ const highlight = computed(() => {
   return state.hilightText ? [state.hilightText] : null
 })
 
+const changePdf = () => {
+  state.pdf = state.pdf === 1 ? 2 : 1
+  state.page = 1
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const pdfSource =
   'data:application/pdf;base64,' +
   'JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxv' +
@@ -35,39 +44,35 @@ const pdfSource =
   'MDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9vdCAxIDAgUgo+PgpzdGFy' +
   'dHhyZWYKNDkyCiUlRU9G'
 
-const timer = ref()
-const handleZoom = (type: 'zoomIn' | 'zoomOut') => {
-  state.zooming = true
-  if (type === 'zoomIn') {
-    state.scale += 0.2
-  } else {
-    state.scale -= 0.2
-  }
-
-  if (timer.value) {
-    clearTimeout(timer.value)
-  }
-  timer.value = setTimeout(() => {
-    state.zooming = false
-    pdfRef.value?.render()
-  }, 500)
+const handleZoom = (type: 'zoomIn' | 'zoomOut' | 'auto') => {
+  pdfRef.value?.zoom(type)
 }
 </script>
 
 <template>
   <div>
+    <button @click="changePdf">切换pdf</button>
+    <button @click="state.page -= 1">前一页</button>
+    <button @click="state.page += 1">后一页</button>
     <button @click="handleZoom('zoomIn')">放大</button>
     <button @click="handleZoom('zoomOut')">缩小</button>
+    <button @click="handleZoom('auto')">自适应</button>
+    <input v-model="state.hilightTextTemp" type="text" @blur="handleBlur" />
     <div
-      style="width: 600px; border: 1px solid red; overflow: auto; height: 800px"
+      style="
+        width: 80%;
+        max-width: 1000px;
+        border: 1px solid red;
+        overflow: auto;
+        height: 800px;
+        margin: auto;
+      "
     >
-      <input v-model="state.hilightTextTemp" type="text" @blur="handleBlur" />
       <VuePdfEmbed
         ref="pdfRef"
-        :width="state.scale * 500"
-        :source="pdfSource"
+        :page="state.page"
+        :source="state.pdf === 1 ? testPdf : test2Pdf"
         :highlight-text="highlight"
-        :zooming="state.zooming"
         text-layer
       />
     </div>
@@ -85,9 +90,6 @@ body {
 .vue-pdf-embed {
   &__pagewrap {
     margin: auto;
-  }
-  canvas {
-    background-color: #fff;
   }
 }
 </style>
