@@ -18,7 +18,7 @@ const handleBlur = () => {
 }
 
 const highlight = computed(() => {
-  return state.hilightText ? [state.hilightText] : null
+  return state.hilightText
 })
 
 const changePdf = () => {

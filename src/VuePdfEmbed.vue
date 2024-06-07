@@ -1,5 +1,6 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
+import { escapeRegExp } from 'lodash'
 import { computed, onBeforeUnmount, ref, shallowRef, toRef, watch } from 'vue'
 import { useResizeObserver } from '@vueuse/core'
 import { AnnotationLayer, renderTextLayer } from 'pdfjs-dist/legacy/build/pdf'
@@ -50,7 +51,7 @@ const props = withDefaults(
     /**
      * Text to highlight.
      */
-    highlightText?: string[]
+    highlightText?: string
   }>(),
   {
     rotation: 0,
@@ -152,6 +153,17 @@ const setScale = (value: number | string, noUpdate: boolean) => {
   }
 }
 
+function findMatches(article: string, searchString: string) {
+  const positions = []
+  let position = article.indexOf(searchString)
+  while (position !== -1) {
+    positions.push(position)
+    position = article.indexOf(searchString, position + 1)
+  }
+
+  return positions
+}
+
 /**
  * Renders the PDF document as canvas element(s) and additional layers.
  */
@@ -240,17 +252,61 @@ const render = async ({
           )
           div1.style.removeProperty('--scale-factor')
 
-          // Highlight text
-          if (props.highlightText && props.highlightText?.length > 0) {
+          if (props.highlightText) {
             const layerChildren = div1.querySelectorAll('[role="presentation"]')
+            const textContentItemsStr: string[] = []
             for (const child of layerChildren) {
-              let innerHTML = child.innerHTML
-              innerHTML = innerHTML.replace(
-                new RegExp(props.highlightText.join('|'), 'g'),
-                (match) => `<span class="highlight appended">${match}</span>`
-              )
-              child.innerHTML = innerHTML
+              textContentItemsStr.push(child.textContent || '')
             }
+            const textSumStr = textContentItemsStr.join('')
+
+            // [0, 4, 8, 12] 匹配到的开始索引
+            const matchesStartIdx = findMatches(textSumStr, props.highlightText)
+            const matchesLen = props.highlightText.length
+
+            const actions = []
+
+            let pos = 0
+            for (let i = 0; i < textContentItemsStr.length; i++) {
+              const iStart = pos // 当前这段的开始索引
+              const iEnd = pos + textContentItemsStr[i].length // 当前这段的结束索引
+              const iRange = [iStart, iEnd]
+
+              for (const matchStartIdx of matchesStartIdx) {
+                const range = [matchStartIdx, matchStartIdx + matchesLen]
+                const intersection = [
+                  Math.max(range[0], iRange[0]),
+                  Math.min(range[1], iRange[1]),
+                ]
+                if (intersection[0] < intersection[1]) {
+                  const str = textContentItemsStr[i].substring(
+                    intersection[0] - iStart,
+                    intersection[1] - iStart
+                  )
+                  actions.push({
+                    idx: i,
+                    text: str,
+                  })
+                }
+              }
+
+              pos += textContentItemsStr[i].length
+            }
+
+            actions.forEach((item) => {
+              const { idx, text } = item
+              const elem = layerChildren[idx]
+              let innerHTML = elem.innerHTML
+              if (innerHTML.length === text.length) {
+                elem.classList.add('highlight')
+              } else {
+                innerHTML = innerHTML.replace(
+                  new RegExp(escapeRegExp(text), 'g'),
+                  (match) => `<span class="highlight">${match}</span>`
+                )
+                elem.innerHTML = innerHTML
+              }
+            })
           }
         }
 
