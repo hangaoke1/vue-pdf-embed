@@ -267,6 +267,7 @@ const render = async ({
             const actions = []
 
             let pos = 0
+            const existMap: Record<string, boolean> = {}
             for (let i = 0; i < textContentItemsStr.length; i++) {
               const iStart = pos // 当前这段的开始索引
               const iEnd = pos + textContentItemsStr[i].length // 当前这段的结束索引
@@ -278,7 +279,7 @@ const render = async ({
                   Math.max(range[0], iRange[0]),
                   Math.min(range[1], iRange[1]),
                 ]
-                if (intersection[0] < intersection[1]) {
+                if (intersection[0] < intersection[1] && !existMap[i]) {
                   const str = textContentItemsStr[i].substring(
                     intersection[0] - iStart,
                     intersection[1] - iStart
@@ -287,6 +288,7 @@ const render = async ({
                     idx: i,
                     text: str,
                   })
+                  existMap[i] = true
                 }
               }
 
@@ -297,15 +299,11 @@ const render = async ({
               const { idx, text } = item
               const elem = layerChildren[idx]
               let innerHTML = elem.innerHTML
-              if (innerHTML.length === text.length) {
-                elem.classList.add('highlight')
-              } else {
-                innerHTML = innerHTML.replace(
-                  new RegExp(escapeRegExp(text), 'g'),
-                  (match) => `<span class="highlight">${match}</span>`
-                )
-                elem.innerHTML = innerHTML
-              }
+              innerHTML = innerHTML.replace(
+                new RegExp(escapeRegExp(text), 'g'),
+                (match) => `<span class="highlight appended">${match}</span>`
+              )
+              elem.innerHTML = innerHTML
             })
           }
         }
