@@ -256,9 +256,15 @@ const render = async ({
             const layerChildren = div1.querySelectorAll('[role="presentation"]')
             const textContentItemsStr: string[] = []
             for (const child of layerChildren) {
-              textContentItemsStr.push(child.textContent || '')
+              // 过滤空格节点
+              if (child.textContent === ' ') {
+                textContentItemsStr.push('')
+              } else {
+                textContentItemsStr.push(child.textContent || '')
+              }
             }
             const textSumStr = textContentItemsStr.join('')
+            console.log('textSumStr', textSumStr)
 
             // [0, 4, 8, 12] 匹配到的开始索引
             const matchesStartIdx = findMatches(textSumStr, props.highlightText)

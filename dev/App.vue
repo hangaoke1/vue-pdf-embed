@@ -71,7 +71,11 @@ const handleZoom = (type: 'zoomIn' | 'zoomOut' | 'auto') => {
       <VuePdfEmbed
         ref="pdfRef"
         :page="state.page"
-        :source="state.pdf === 1 ? testPdf : test2Pdf"
+        :source="
+          state.pdf === 1
+            ? 'http://minioapi.pub.agatha-tech.com/lingnan/2024-05/%5BPDF%5D%E6%B1%BD%E8%BD%A6%E7%BB%B4%E4%BF%AE%E4%BC%81%E4%B8%9A%E7%AE%A1%E7%90%8697871132852410000_884e9c691933678073669f268d25009ab786d63549a1c5eeca9cb8ea1b604b67.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=NyTNZWl2HVe2enAyP3Q8%2F20240608%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240608T131635Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=ff9d86d2e57217f3daaf23ab283cb919bd5fe97d8325b10058dc5ea522c2a5c7'
+            : test2Pdf
+        "
         :highlight-text="highlight"
         text-layer
       />
